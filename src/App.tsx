@@ -8,32 +8,13 @@ import MenuItem from './components/Menu/menuItem';
 import Menu from './components/Menu/menu';
 import SubMenu from './components/Menu/subMenu';
 import Icon from './components/Icon/icon';
-
+import { Input } from './components/Input/input';
 library.add(fas as IconPack)
 const App: React.FC = () => {
   return (
     <div className="App">
       <header className="App-header">
-        {/* <Icon icon="coffee" theme="danger" size="10x"></Icon> */}
-        <Menu defaultIndex={'0'} onSelect={(index: string) => console.log(index)} defaultOpenSubMenu={['2']}>
-          <MenuItem>
-            cool link1
-          </MenuItem>
-          <MenuItem disabled>
-            cool link2
-          </MenuItem>
-          <SubMenu title='dropdown'>
-            <MenuItem>
-              dropdown 1
-            </MenuItem>
-            <MenuItem>
-              dropdown 2
-            </MenuItem>
-          </SubMenu>
-          <MenuItem>
-            cool link3
-          </MenuItem>
-        </Menu>
+        <Input></Input>
       </header>
     </div>
   );
