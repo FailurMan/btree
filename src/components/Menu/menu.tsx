@@ -1,4 +1,4 @@
-import React, { useState, createContext } from 'react'
+import React, { useState, createContext, FC, FunctionComponentElement, CSSProperties, ReactNode } from 'react'
 import classNames from 'classnames'
 import { MenuItemProps } from './menuItem'
 type MenuMode = 'horizontal' | 'vertical'
@@ -7,9 +7,9 @@ export interface MenuProps {
     defaultIndex?: string
     className?: string
     mode?: MenuMode
-    style?: React.CSSProperties
+    style?: CSSProperties
     onSelect?: SelectCallback
-    children?: React.ReactNode
+    children?: ReactNode
     defaultOpenSubMenu?: string[]
 }
 interface IMenuContext {
@@ -20,7 +20,7 @@ interface IMenuContext {
 }
 
 export const MenuContext = createContext<IMenuContext>({ index: '0' })
-const Menu: React.FC<MenuProps> = (props) => {
+export const Menu: FC<MenuProps> = (props) => {
     const { className, mode, style, children, defaultIndex, onSelect, defaultOpenSubMenu } = props
     const [currentActive, setActive] = useState(defaultIndex)
     const classes = classNames('btree-menu', className, {
@@ -41,7 +41,7 @@ const Menu: React.FC<MenuProps> = (props) => {
     }
     const renderChildren = () => {
         return React.Children.map(children, (child, index) => {
-            const childElement = child as React.FunctionComponentElement<MenuItemProps>
+            const childElement = child as FunctionComponentElement<MenuItemProps>
             const { displayName } = childElement.type
             if (displayName === 'MenuItem' || displayName === 'SubMenu') {
                 return React.cloneElement(childElement, {
@@ -67,4 +67,4 @@ Menu.defaultProps = {
     defaultOpenSubMenu: []
 }
 
-export default Menu
+export default Menu;

@@ -1,17 +1,17 @@
 import React from 'react';
 //@ts-ignore
 import { render, fireEvent } from '@testing-library/react'
+import { screen } from "@testing-library/dom"
 import Button, { ButtonProps, ButtonSize, ButtonType } from "./button";
 
 const defaultProps = {
-    onClick: jest.fn()
+    onClick: jest.fn(),
 }
 const testProps: ButtonProps = {
     btnType: 'primary',
     size: 'lg',
     className: 'klass'
 }
-
 const disabledProps: ButtonProps = {
     disabled: true,
     onClick: jest.fn(),
@@ -19,6 +19,7 @@ const disabledProps: ButtonProps = {
 describe('test Button component', () => {
     it('should render the correct default button', () => {
         const wrapper = render(<Button {...defaultProps}>Nice</Button>)
+        screen.debug()
         const element = wrapper.getByText('Nice') as HTMLButtonElement
         expect(element).toBeInTheDocument()
         expect(element.tagName).toEqual('BUTTON')
