@@ -1,72 +1,142 @@
-import React, { ReactElement, InputHTMLAttributes, FC, ChangeEvent, useState, useEffect } from 'react'
-import Icon from '../Icon/icon'
+import React, { FC, useState, ChangeEvent, KeyboardEvent, ReactElement, useEffect, useRef } from 'react'
+import useDebounce from '../../hooks/useDebounce'
 import Input, { InputProps } from '../Input/input'
+import Icon from '../Icon/icon'
+import classNames from 'classnames'
+import useClickOutside from '../../hooks/useClickOutside'
+import Transition from '../Transition/transition'
 interface DataSourceObject {
     value: string
 }
 export type DataSourceType<T = {}> = T & DataSourceObject
 export interface AutoCompleteProps extends Omit<InputProps, 'onSelect'> {
-    fetchSuggestions?: (keyword: string) => DataSourceType[] | Promise<DataSourceType[]>
-    onSelect?: (item: DataSourceType) => void
-    renderOption?: (item: DataSourceType) => ReactElement
+    fetchSuggestions: (str: string) => DataSourceType[] | Promise<DataSourceType[]>;
+    onSelect?: (item: DataSourceType) => void;
+    renderOption?: (item: DataSourceType) => ReactElement;
 }
-
 export const AutoComplete: FC<AutoCompleteProps> = (props) => {
-    const { fetchSuggestions, onSelect, value, renderOption, ...restProps } = props
-    const [suggestion, setSuggestion] = useState<DataSourceType[]>([])
+    const {
+        fetchSuggestions,
+        onSelect,
+        value,
+        renderOption,
+        ...restProps
+    } = props
     const [inputValue, setInputValue] = useState(value as string)
-    const [isLoading, setLoading] = useState(false)
-
+    const [suggestions, setSugestions] = useState<DataSourceType[]>([])
+    const [loading, setLoading] = useState(false)
+    const [showDropdown, setShowDropdown] = useState(false)
+    const [highlightIndex, setHighlightIndex] = useState(-1)
+    const triggerSearch = useRef(false)
+    const componentRef = useRef<HTMLDivElement>(null)
+    const debouncedValue = useDebounce(inputValue, 300)
+    useClickOutside(componentRef, () => { setSugestions([]) })
     useEffect(() => {
-        if (inputValue) {
-            const results = fetchSuggestions(inputValue)
+        if (debouncedValue && triggerSearch.current) {
+            setSugestions([])
+            const results = fetchSuggestions(debouncedValue)
             if (results instanceof Promise) {
-                console.log('trigger')
                 setLoading(true)
                 results.then(data => {
                     setLoading(false)
-                    setSuggestion(data)
+                    setSugestions(data)
+                    if (data.length > 0) {
+                        setShowDropdown(true)
+                    }
                 })
             } else {
-                setSuggestion(results)
+                setSugestions(results)
+                setShowDropdown(true)
+                if (results.length > 0) {
+                    setShowDropdown(true)
+                }
             }
         } else {
-            setSuggestion([])
+            setShowDropdown(false)
         }
-    }, [inputValue])
+        setHighlightIndex(-1)
+    }, [debouncedValue, fetchSuggestions])
+    const highlight = (index: number) => {
+        if (index < 0) index = 0
+        if (index >= suggestions.length) {
+            index = suggestions.length - 1
+        }
+        setHighlightIndex(index)
+    }
+    const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+        switch (e.keyCode) {
+            case 13:
+                if (suggestions[highlightIndex]) {
+                    handleSelect(suggestions[highlightIndex])
+                }
+                break
+            case 38:
+                highlight(highlightIndex - 1)
+                break
+            case 40:
+                highlight(highlightIndex + 1)
+                break
+            case 27:
+                setShowDropdown(false)
+                break
+            default:
+                break
+        }
+    }
     const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value.trim()
         setInputValue(value)
+        triggerSearch.current = true
     }
     const handleSelect = (item: DataSourceType) => {
         setInputValue(item.value)
-        setSuggestion([])
+        setShowDropdown(false)
         if (onSelect) {
             onSelect(item)
         }
+        triggerSearch.current = false
     }
     const renderTemplate = (item: DataSourceType) => {
         return renderOption ? renderOption(item) : item.value
     }
     const generateDropdown = () => {
         return (
-            <ul>
-                {suggestion.map((item, index) => {
-                    return (
-                        <li key={index} onClick={() => handleSelect(item)}>{renderTemplate(item)}</li>
-                    )
-                })}
-            </ul>
+            <Transition
+                in={showDropdown || loading}
+                animation="zoom-in-top"
+                timeout={300}
+                onExited={() => { setSugestions([]) }}
+            >
+                <ul className="btree-suggestion-list">
+                    {loading &&
+                        <div className="suggstions-loading-icon">
+                            <Icon icon="spinner" spin />
+                        </div>
+                    }
+                    {suggestions.map((item, index) => {
+                        const cnames = classNames('suggestion-item', {
+                            'is-active': index === highlightIndex
+                        })
+                        return (
+                            <li key={index} className={cnames} onClick={() => handleSelect(item)}>
+                                {renderTemplate(item)}
+                            </li>
+                        )
+                    })}
+                </ul>
+            </Transition>
         )
     }
     return (
-        <div className='btree-auto-complete'>
-            <Input value={inputValue} onChange={handleChange} {...restProps}></Input>
-            {isLoading && <ul><Icon icon="spinner" spin></Icon></ul>}
-            {
-                (suggestion.length > 0) ? generateDropdown() : null
-            }
-        </div >
+        <div className="btree-auto-complete" ref={componentRef}>
+            <Input
+                value={inputValue}
+                onChange={handleChange}
+                onKeyDown={handleKeyDown}
+                {...restProps}
+            />
+            {generateDropdown()}
+        </div>
     )
 }
 
