@@ -14,9 +14,7 @@ export interface InputProps extends Omit<InputHTMLAttributes<HTMLElement>, 'size
 
 
 export const Input: FC<InputProps> = (props) => {
-    //取出所有属性
-    const { disabled, size, icon, prepend, append, children, style, ...restProps } = props
-    //根据属性计算不,同的className
+    const { disabled, size, icon, prepend, append, children, style, ...restProps } = props///
     const cnames = classNames('btree-input-wrapper', {
         [`input-size-${size}`]: size,
         'is-disabled': disabled,
@@ -35,7 +33,6 @@ export const Input: FC<InputProps> = (props) => {
         restProps.value = fixControlledValue(props.value)
     }
     return (
-        //根据属性判断是否添加特定的节点
         <div className={cnames} style={style}>
             {prepend && <div className='btree-input-group-prepend'>{prepend}</div>}
             {icon && <div className="icon-wrapper"><Icon icon={icon} title={`title-${icon}`} /></div>}
