@@ -5,6 +5,7 @@ import { action } from '@storybook/addon-actions'
 import { withInfo } from '@storybook/addon-info'
 import Menu from "./menu";
 import MenuItem from "./menuItem";
+import SubMenu from "./subMenu";
 const defaultMenu = () => (
     <Menu defaultIndex='0' onSelect={(index) => { action(`clicked ${index} item`) }} >
         <MenuItem>
@@ -16,6 +17,11 @@ const defaultMenu = () => (
         <MenuItem>
             cool link 2
         </MenuItem>
+        <SubMenu title="dropdown">
+            <MenuItem>
+                drop1
+            </MenuItem>
+        </SubMenu>
     </Menu>
 )
 storiesOf('Menu Component', module)
